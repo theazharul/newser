@@ -1,0 +1,1902 @@
+# NEWS SITE GENERATION PLATFORM
+# Architecture & Development Plan
+# Stack: React + TypeScript + Laravel + MySQL
+
+==================================================
+1. PRODUCT VISION
+==================================================
+
+Build a reusable platform for creating and maintaining
+multiple news websites from one central codebase.
+
+The platform must allow:
+
+1. Create a news website project.
+2. Select a theme.
+3. Add/remove/reorder reusable components.
+4. Configure each component visually.
+5. Customize colors, typography, header, footer, etc.
+6. Preview the complete website live.
+7. Use demo content during preview.
+8. Generate a standalone client website.
+9. Deploy the generated website to shared hosting.
+10. Maintain multiple client websites.
+11. Release platform/component/theme updates.
+12. Safely upgrade existing client websites.
+13. Preserve client content and customizations.
+
+Core principle:
+
+    Build Once
+        ↓
+    Reuse
+        ↓
+    Customize
+        ↓
+    Generate
+        ↓
+    Deploy
+        ↓
+    Maintain
+        ↓
+    Upgrade Many Clients
+
+
+==================================================
+2. TECHNOLOGY STACK
+==================================================
+
+Frontend:
+
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- React Router
+- Zustand or equivalent lightweight state management
+
+Backend:
+
+- Laravel
+- Laravel API
+- Laravel Sanctum
+- MySQL/MariaDB
+- Laravel Storage
+- Laravel Queue where necessary
+
+Public website:
+
+- React + TypeScript
+- Prefer SSR/SSG architecture for SEO-heavy production sites
+- Avoid unnecessary SPA-only architecture for public news pages
+
+Development:
+
+- Composer
+- npm/pnpm
+- Git
+- PHPUnit/Pest
+- Vitest
+- Playwright
+
+Deployment target:
+
+- PHP
+- MySQL/MariaDB
+- Apache/Nginx
+- Cron
+- Shared hosting
+
+Do NOT initially require:
+
+- Redis
+- Elasticsearch
+- Docker
+- Kubernetes
+- Node.js runtime on production
+- Long-running workers
+- Rust backend
+
+
+==================================================
+3. HIGH-LEVEL ARCHITECTURE
+==================================================
+
+                    NEWS PLATFORM
+                         │
+             ┌───────────┴───────────┐
+             │                       │
+       React Admin              React Builder
+             │                       │
+             └───────────┬───────────┘
+                         │
+                    Laravel API
+                         │
+                      MySQL
+                         │
+             ┌───────────┴───────────┐
+             │                       │
+       Project Management       Content Management
+             │
+             ↓
+       Theme + Components
+             │
+             ↓
+       Preview Renderer
+             │
+             ↓
+       Project Configuration
+             │
+             ↓
+       Site Generator
+             │
+             ↓
+       Standalone Client Site
+
+
+==================================================
+4. MONOREPO
+==================================================
+
+Use a monorepo initially.
+
+news-platform/
+
+├── apps/
+│   ├── platform/
+│   │   └── Laravel backend
+│   │
+│   ├── admin/
+│   │   └── React admin application
+│   │
+│   ├── builder/
+│   │   └── React visual builder
+│   │
+│   └── client-runtime/
+│       └── React public website runtime
+│
+├── packages/
+│   ├── ui/
+│   ├── news-types/
+│   ├── news-components/
+│   ├── news-theme-engine/
+│   ├── news-builder/
+│   ├── news-renderer/
+│   ├── news-config/
+│   └── news-themes/
+│       ├── modern/
+│       ├── classic/
+│       └── magazine/
+│
+├── generator/
+│
+├── docs/
+│
+└── tests/
+
+
+==================================================
+5. LARAVEL BACKEND
+==================================================
+
+Laravel is responsible for:
+
+- Authentication
+- Users
+- Roles
+- Permissions
+- Clients
+- Projects
+- Posts
+- Categories
+- Tags
+- Authors
+- Media
+- Pages
+- Menus
+- SEO
+- Advertisements
+- Project configuration
+- Theme registry
+- Component registry
+- Versions
+- Licenses
+- Deployment information
+- Update management
+- Audit logs
+
+
+==================================================
+6. CORE ENTITIES
+==================================================
+
+Users
+Roles
+Permissions
+
+Clients
+Projects
+Domains
+Licenses
+
+Posts
+Categories
+Tags
+Authors
+
+Pages
+Menus
+Media
+
+Themes
+Theme Versions
+
+Components
+Component Versions
+
+Project Configurations
+Project Versions
+
+Deployments
+Updates
+Backups
+Audit Logs
+
+
+==================================================
+7. NEWS DOMAIN
+==================================================
+
+Post:
+
+- id
+- title
+- slug
+- excerpt
+- body
+- status
+- author_id
+- category_id
+- featured_image_id
+- published_at
+- seo_title
+- seo_description
+- created_at
+- updated_at
+
+Post statuses:
+
+- draft
+- scheduled
+- published
+- archived
+
+Categories:
+
+- id
+- name
+- slug
+- description
+- parent_id
+
+Tags:
+
+- id
+- name
+- slug
+
+Authors:
+
+- id
+- user_id
+- name
+- bio
+- avatar
+- designation
+- social links
+
+
+==================================================
+8. MEDIA SYSTEM
+==================================================
+
+Media must be first-class.
+
+Support:
+
+- images
+- videos
+- documents
+
+Image variants:
+
+- original
+- thumbnail
+- small
+- medium
+- large
+- WebP
+- AVIF
+
+Store metadata:
+
+- width
+- height
+- MIME type
+- size
+- alt text
+- caption
+- credit
+
+Never trust uploaded file extensions.
+
+Validate:
+
+- MIME type
+- file size
+- image dimensions
+- filename
+- upload permissions
+
+
+==================================================
+9. REACT COMPONENT SYSTEM
+==================================================
+
+Reusable components are one of the most important
+assets of the platform.
+
+Initial components:
+
+- Hero
+- BreakingNews
+- NewsCard
+- NewsGrid
+- NewsList
+- LatestNews
+- PopularNews
+- FeaturedNews
+- CategorySection
+- VideoGrid
+- PhotoGallery
+- Advertisement
+- Newsletter
+- SocialLinks
+- AuthorBox
+- RelatedPosts
+- Pagination
+
+
+==================================================
+10. COMPONENT PACKAGE STRUCTURE
+==================================================
+
+Example:
+
+packages/news-components/news-grid/
+
+├── NewsGrid.tsx
+├── schema.ts
+├── types.ts
+├── data.ts
+├── styles.css
+└── tests/
+
+Each component must have:
+
+- component
+- metadata
+- configuration schema
+- TypeScript types
+- data provider
+- renderer
+- assets
+- version
+- tests
+
+
+==================================================
+11. COMPONENT REGISTRY
+==================================================
+
+Create a central registry.
+
+Example:
+
+const registry = {
+    hero: Hero,
+    "breaking-news": BreakingNews,
+    "news-grid": NewsGrid,
+    "news-list": NewsList,
+    advertisement: Advertisement
+};
+
+The platform should never hard-code every component
+inside the builder.
+
+The builder should discover components from metadata.
+
+
+==================================================
+12. COMPONENT SCHEMA
+==================================================
+
+Every component defines its configuration schema.
+
+Example:
+
+{
+    "name": "news-grid",
+    "version": "2.1.0",
+    "fields": {
+        "title": {
+            "type": "text"
+        },
+        "category": {
+            "type": "category"
+        },
+        "columns": {
+            "type": "select",
+            "options": [2, 3, 4]
+        },
+        "limit": {
+            "type": "number"
+        }
+    }
+}
+
+The builder reads this schema and automatically
+generates the settings UI.
+
+
+==================================================
+13. COMPONENT CONFIGURATION
+==================================================
+
+Store configuration as data.
+
+Example:
+
+{
+    "component": "news-grid",
+    "version": "2.1.0",
+    "props": {
+        "title": "Sports",
+        "category": "sports",
+        "limit": 8,
+        "columns": 4
+    }
+}
+
+This means changing a component's configuration
+does not require modifying PHP or React source code.
+
+
+==================================================
+14. DATA / PRESENTATION SEPARATION
+==================================================
+
+Never mix database queries directly into visual components.
+
+Use:
+
+Database
+   ↓
+API / Data Provider
+   ↓
+Component Data
+   ↓
+React Component
+   ↓
+Theme
+   ↓
+HTML
+
+
+Example:
+
+NewsGrid receives:
+
+{
+    items: [...]
+}
+
+It should not know how the database works.
+
+
+==================================================
+15. THEME SYSTEM
+==================================================
+
+Themes are independent packages.
+
+themes/
+
+├── modern/
+├── classic/
+└── magazine/
+
+Each theme can contain:
+
+- layouts
+- header
+- footer
+- navigation
+- homepage
+- article
+- category
+- search
+- author
+- component variants
+- theme tokens
+- assets
+- configuration
+
+
+==================================================
+16. THEME RULE
+==================================================
+
+Themes control presentation.
+
+Themes must NOT contain core business logic.
+
+Core:
+
+- Posts
+- Categories
+- Users
+- Media
+- SEO
+- Permissions
+
+Theme:
+
+- Layout
+- Colors
+- Typography
+- Header
+- Footer
+- Component appearance
+
+
+==================================================
+17. DESIGN TOKENS
+==================================================
+
+Each theme exposes design tokens.
+
+Example:
+
+{
+    "colors": {
+        "primary": "#C00000",
+        "secondary": "#222222",
+        "background": "#FFFFFF",
+        "text": "#111111",
+        "muted": "#777777",
+        "border": "#DDDDDD"
+    },
+
+    "typography": {
+        "heading": "...",
+        "body": "..."
+    }
+}
+
+Client configuration modifies tokens.
+
+Client should NOT modify theme source.
+
+
+==================================================
+18. THEME OVERRIDES
+==================================================
+
+Support controlled overrides.
+
+Example:
+
+Modern Theme
+
+    Header
+    Hero
+    NewsCard
+    NewsGrid
+    Footer
+
+Client Extension
+
+    Header override
+    NewsCard override
+
+The client does not copy the entire theme.
+
+Therefore:
+
+Theme update
+    ↓
+Client receives update
+    ↓
+Client overrides remain
+
+
+==================================================
+19. CLIENT CUSTOMIZATION MODEL
+==================================================
+
+Separate customization into four levels.
+
+LEVEL 1: CONTENT
+
+- articles
+- categories
+- authors
+- images
+- menus
+- pages
+- advertisements
+
+LEVEL 2: CONFIGURATION
+
+- colors
+- fonts
+- logo
+- header style
+- footer style
+- sidebar
+- homepage layout
+
+LEVEL 3: EXTENSIONS
+
+- custom CSS
+- custom JS
+- custom component
+- theme override
+
+LEVEL 4: CORE
+
+- Laravel
+- platform engine
+- core React runtime
+
+Clients NEVER directly modify Level 4.
+
+
+==================================================
+20. HOMEPAGE BUILDER
+==================================================
+
+Homepage is configuration-driven.
+
+Example:
+
+{
+    "page": "homepage",
+
+    "sections": [
+        {
+            "component": "breaking-news"
+        },
+        {
+            "component": "hero",
+            "category": "national"
+        },
+        {
+            "component": "news-grid",
+            "category": "sports",
+            "limit": 8
+        },
+        {
+            "component": "advertisement"
+        },
+        {
+            "component": "video-grid"
+        }
+    ]
+}
+
+Builder allows:
+
+- add section
+- remove section
+- duplicate section
+- reorder section
+- configure section
+
+
+==================================================
+21. VISUAL BUILDER
+==================================================
+
+Builder UI:
+
++---------------------------------------------------------+
+| News Builder                       [Preview] [Generate] |
++----------------+--------------------------+-------------+
+| Components     |                          | Settings    |
+|                |      LIVE WEBSITE        |             |
+| Hero           |                          | Title       |
+| News Grid      |          HERO            | Category    |
+| News List      |                          | Columns     |
+| Breaking News  |      NEWS GRID           | Limit       |
+| Video Grid     |                          |             |
+| Advertisement  |      NEWS LIST           |             |
++----------------+--------------------------+-------------+
+
+Use:
+
+- React
+- TypeScript
+- Tailwind
+- Zustand
+- Drag and drop
+- Schema-driven settings
+
+
+==================================================
+22. LIVE PREVIEW
+==================================================
+
+CRITICAL RULE:
+
+Do NOT generate a Laravel project every time
+the user changes a setting.
+
+Instead:
+
+Builder
+   ↓
+Project Configuration
+   ↓
+React Preview Renderer
+   ↓
+Live Website
+
+
+The exact same component system should power:
+
+Builder Preview
+        AND
+Generated Client Website
+
+
+This prevents:
+
+"Preview looks different from production."
+
+
+==================================================
+23. PREVIEW ENGINE
+==================================================
+
+Create:
+
+packages/news-renderer/
+
+Responsible for:
+
+- reading page configuration
+- resolving components
+- loading theme
+- resolving component versions
+- rendering React components
+
+
+Example:
+
+Project Config
+      ↓
+Renderer
+      ↓
+Theme
+      ↓
+Component Registry
+      ↓
+React UI
+
+
+==================================================
+24. DEMO CONTENT
+==================================================
+
+Every theme/project preview should have demo data.
+
+Demo data:
+
+- articles
+- categories
+- authors
+- images
+- videos
+
+Preview:
+
+Theme
++
+Configuration
++
+Demo Content
+
+When generating the client site:
+
+Demo content can be:
+
+- removed
+- replaced
+- imported as starter content
+
+Client content must remain separate.
+
+
+==================================================
+25. PROJECT MODEL
+==================================================
+
+A project represents one future/client website.
+
+Example:
+
+Project
+
+- id
+- client_id
+- name
+- domain
+- theme
+- configuration
+- status
+- platform_version
+- created_at
+- updated_at
+
+
+==================================================
+26. PROJECT CONFIGURATION
+==================================================
+
+Example:
+
+{
+    "theme": {
+        "name": "modern",
+        "version": "2.4.0"
+    },
+
+    "branding": {
+        "name": "Example News",
+        "logo": "/logo.png"
+    },
+
+    "homepage": {
+        "sections": [...]
+    },
+
+    "colors": {
+        "primary": "#C00000"
+    },
+
+    "features": {
+        "comments": true,
+        "video": true,
+        "newsletter": false
+    }
+}
+
+
+==================================================
+27. GENERATED CLIENT SITE
+==================================================
+
+Generated project:
+
+client-site/
+
+├── app/
+├── bootstrap/
+├── config/
+├── database/
+├── public/
+├── resources/
+├── routes/
+├── storage/
+├── composer.json
+├── package.json
+└── platform.lock
+
+
+The generated site must remain independent.
+
+It must NOT require the central platform to render
+every page.
+
+
+==================================================
+28. GENERATED SITE ARCHITECTURE
+==================================================
+
+Client Site
+
+    Laravel
+       │
+       ├── API
+       │
+       ├── Admin
+       │
+       └── React Runtime
+                │
+                ├── Theme
+                ├── Components
+                └── Configuration
+
+
+==================================================
+29. PLATFORM LOCK FILE
+==================================================
+
+Every generated site gets a lock file.
+
+platform.lock
+
+Example:
+
+{
+    "platform": "3.2.1",
+
+    "theme": {
+        "name": "modern",
+        "version": "2.4.0"
+    },
+
+    "components": {
+        "hero": "2.0.0",
+        "news-grid": "3.1.0",
+        "breaking-news": "1.4.0"
+    }
+}
+
+This tells the platform exactly which versions
+the client is running.
+
+
+==================================================
+30. VERSIONING
+==================================================
+
+Version:
+
+Platform
+Theme
+Component
+Generator
+Configuration schema
+
+Use semantic versioning:
+
+MAJOR.MINOR.PATCH
+
+Example:
+
+news-grid 3.1.0
+
+MAJOR:
+Breaking changes
+
+MINOR:
+Backward-compatible features
+
+PATCH:
+Bug fixes
+
+
+==================================================
+31. UPDATE SYSTEM
+==================================================
+
+Client update:
+
+Backup
+   ↓
+Check compatibility
+   ↓
+Download update
+   ↓
+Update packages
+   ↓
+Run migrations
+   ↓
+Build React assets
+   ↓
+Run tests/health checks
+   ↓
+Success
+   ↓
+Update lock file
+
+Failure:
+
+    ↓
+Rollback
+
+
+==================================================
+32. NEVER OVERWRITE CLIENT CUSTOMIZATION
+==================================================
+
+Platform-controlled:
+
+- core
+- official themes
+- official components
+
+Client-controlled:
+
+- content
+- configuration
+- custom CSS
+- custom components
+- theme overrides
+
+Update must modify only platform-controlled files.
+
+
+==================================================
+33. DATABASE MIGRATIONS
+==================================================
+
+Core migrations:
+
+platform-controlled
+
+Client custom migrations:
+
+client-controlled
+
+Never modify old migrations after release.
+
+Always create a new migration.
+
+Example:
+
+2026_01_add_author_social_links.php
+
+
+==================================================
+34. SEO
+==================================================
+
+SEO must be built into the platform.
+
+Support:
+
+- SEO title
+- meta description
+- canonical URL
+- OpenGraph
+- Twitter/social cards
+- sitemap.xml
+- RSS
+- robots.txt
+- article structured data
+- breadcrumb structured data
+- author metadata
+- category metadata
+- pagination metadata
+- image alt text
+
+
+==================================================
+35. PUBLIC WEBSITE PERFORMANCE
+==================================================
+
+Prioritize:
+
+- SSR/SSG where appropriate
+- server rendering
+- optimized images
+- WebP
+- AVIF
+- lazy loading
+- code splitting
+- caching
+- database indexes
+- eager loading
+- optimized API queries
+- prebuilt production assets
+
+Do not turn the public news website into
+an unnecessarily heavy SPA.
+
+
+==================================================
+36. ADVERTISEMENT SYSTEM
+==================================================
+
+Advertisement should be a reusable component.
+
+Support:
+
+- header ad
+- homepage ad
+- sidebar ad
+- article ad
+- inline ad
+- footer ad
+
+Advertisement configuration:
+
+{
+    "position": "article-inline",
+    "type": "html",
+    "content": "..."
+}
+
+
+==================================================
+37. SEARCH
+==================================================
+
+Initial version:
+
+MySQL/MariaDB search.
+
+Support:
+
+- article title
+- excerpt
+- body
+- category
+- tags
+- author
+
+Do NOT introduce Elasticsearch initially.
+
+Add a dedicated search engine only when actual
+traffic/scale requires it.
+
+
+==================================================
+38. LICENSING
+==================================================
+
+License model:
+
+Client
+Site ID
+Domain
+License
+Expiry
+Platform version
+Enabled features
+
+Example:
+
+License
+
+    client_id
+    site_id
+    domain
+    key
+    status
+    expires_at
+
+
+Do not make every page request dependent on
+the central license server.
+
+Use periodic verification.
+
+
+==================================================
+39. GENERATOR
+==================================================
+
+Initial generator can be Laravel/Node based.
+
+Later create a Rust CLI.
+
+Example future command:
+
+news new example-news
+
+Inputs:
+
+- site name
+- domain
+- theme
+- logo
+- colors
+- enabled components
+- homepage
+- features
+- deployment target
+
+
+==================================================
+40. GENERATION PROCESS
+==================================================
+
+Project Configuration
+        ↓
+Validate
+        ↓
+Create Laravel application
+        ↓
+Install backend packages
+        ↓
+Install React runtime
+        ↓
+Install selected theme
+        ↓
+Install selected components
+        ↓
+Apply configuration
+        ↓
+Create migrations
+        ↓
+Create platform.lock
+        ↓
+Build React assets
+        ↓
+Optimize Laravel
+        ↓
+Run tests
+        ↓
+Generate ZIP/package
+
+
+==================================================
+41. SHARED HOSTING
+==================================================
+
+Generated production package must work on:
+
+- PHP
+- MySQL/MariaDB
+- Apache/Nginx
+- Cron
+
+Production server should NOT require:
+
+- Node.js
+- npm
+- Docker
+- Redis
+- Elasticsearch
+
+React assets must be built before deployment.
+
+
+==================================================
+42. DEPLOYMENT
+==================================================
+
+Development:
+
+React/Laravel
+    ↓
+Git
+    ↓
+CI
+    ↓
+Build
+    ↓
+Production package
+    ↓
+ZIP
+    ↓
+Shared Hosting
+
+
+==================================================
+43. DEPLOYMENT MODES
+==================================================
+
+MODE 1:
+
+Shared Hosting
+
+PHP
+MySQL
+Apache/Nginx
+Cron
+
+MODE 2:
+
+VPS
+
+Laravel
+React
+MySQL
+Redis
+Queue
+Cache
+
+MODE 3:
+
+Enterprise
+
+Docker
+Database
+Redis
+Queue
+Storage
+Monitoring
+
+The application architecture should remain the same.
+
+
+==================================================
+44. BACKUP
+==================================================
+
+Before every update:
+
+1. Database backup
+2. Storage/media backup
+3. Configuration backup
+4. Current version metadata
+
+Keep enough backups for rollback.
+
+
+==================================================
+45. SECURITY
+==================================================
+
+Implement:
+
+- CSRF protection
+- authorization policies
+- roles
+- permissions
+- rate limiting
+- secure uploads
+- MIME validation
+- XSS protection
+- SQL injection protection
+- secure password hashing
+- audit logs
+- secure API authentication
+- backup strategy
+
+Later:
+
+- admin 2FA
+- login notifications
+- security monitoring
+
+
+==================================================
+46. TESTING
+==================================================
+
+Backend unit tests:
+
+- post logic
+- permissions
+- component configuration
+- theme configuration
+- version compatibility
+- licensing
+- generator
+
+Feature tests:
+
+- login
+- post creation
+- publishing
+- category management
+- media
+- homepage
+- preview
+- generation
+- deployment
+- update
+- rollback
+
+Frontend tests:
+
+- components
+- configuration schemas
+- theme rendering
+- builder state
+- renderer
+
+E2E:
+
+- create project
+- select theme
+- add component
+- configure component
+- preview
+- generate
+- deploy
+- update
+
+
+==================================================
+47. DOCUMENTATION
+==================================================
+
+docs/
+
+├── architecture/
+├── backend/
+├── frontend/
+├── components/
+├── themes/
+├── builder/
+├── renderer/
+├── generator/
+├── deployment/
+├── updates/
+├── licensing/
+├── client-customization/
+└── development/
+
+
+==================================================
+48. DEVELOPMENT PHASES
+==================================================
+
+PHASE 1 — CORE CMS
+
+Build:
+
+- Laravel
+- authentication
+- users
+- roles
+- permissions
+- posts
+- categories
+- tags
+- authors
+- media
+- pages
+- SEO
+- admin API
+
+
+==================================================
+
+PHASE 2 — REACT PUBLIC WEBSITE
+
+Build:
+
+- React runtime
+- homepage
+- article page
+- category page
+- search
+- author page
+- navigation
+- header
+- footer
+- responsive layout
+
+Create first theme:
+
+Modern
+
+
+==================================================
+
+PHASE 3 — COMPONENT SYSTEM
+
+Build:
+
+- component registry
+- component schema
+- renderer
+- data providers
+- versioning
+
+Initial components:
+
+- Hero
+- BreakingNews
+- NewsCard
+- NewsGrid
+- NewsList
+- LatestNews
+- VideoGrid
+- Advertisement
+
+
+==================================================
+
+PHASE 4 — THEME SYSTEM
+
+Build:
+
+- theme registry
+- theme packages
+- theme configuration
+- design tokens
+- theme inheritance
+- overrides
+
+Create:
+
+- Modern
+- Classic
+
+
+==================================================
+
+PHASE 5 — VISUAL BUILDER
+
+Build:
+
+- project creation
+- theme selector
+- component selector
+- drag/drop
+- component configuration
+- theme configuration
+- homepage sections
+- live preview
+- demo content
+
+
+==================================================
+
+PHASE 6 — GENERATOR
+
+Build:
+
+- project validation
+- Laravel generation
+- React runtime generation
+- package installation
+- theme installation
+- component installation
+- configuration generation
+- platform.lock
+- production asset build
+- ZIP generation
+
+
+==================================================
+
+PHASE 7 — DEPLOYMENT
+
+Build:
+
+- deployment package
+- shared-hosting installer
+- environment configuration
+- database setup
+- storage setup
+- migration runner
+- health check
+
+
+==================================================
+
+PHASE 8 — UPDATE SYSTEM
+
+Build:
+
+- platform versions
+- theme versions
+- component versions
+- compatibility checking
+- migration system
+- backup
+- update process
+- health check
+- rollback
+- lock file updates
+
+
+==================================================
+
+PHASE 9 — LICENSING
+
+Build:
+
+- client management
+- site management
+- domain management
+- license generation
+- feature flags
+- periodic verification
+
+
+==================================================
+
+PHASE 10 — RUST CLI
+
+Only after the platform is proven.
+
+Possible future:
+
+news-cli
+
+Commands:
+
+news new
+news build
+news update
+news deploy
+news backup
+news rollback
+news doctor
+news upgrade
+
+Rust is optional.
+
+Do NOT introduce Rust into the core system
+until there is a concrete reason.
+
+
+==================================================
+49. FIRST COMMERCIAL MVP
+==================================================
+
+Do NOT build everything.
+
+MVP:
+
+Backend:
+
+- Laravel
+- MySQL
+- authentication
+- posts
+- categories
+- authors
+- media
+- SEO
+
+Frontend:
+
+- React
+- TypeScript
+- Tailwind
+- Vite
+
+Public pages:
+
+- homepage
+- article
+- category
+- search
+- author
+
+Components:
+
+- Hero
+- BreakingNews
+- NewsCard
+- NewsGrid
+- NewsList
+- LatestNews
+- Advertisement
+
+Theme:
+
+- Modern
+
+Builder:
+
+- project creation
+- theme selection
+- component selection
+- drag/reorder
+- component settings
+- theme settings
+- live preview
+
+Generator:
+
+- standalone Laravel + React project
+- ZIP package
+- shared-hosting compatible
+
+Versioning:
+
+- platform.lock
+
+That is enough to prove:
+
+    Build
+      ↓
+    Preview
+      ↓
+    Customize
+      ↓
+    Generate
+      ↓
+    Deploy
+
+
+==================================================
+50. DO NOT BUILD INITIALLY
+==================================================
+
+Avoid:
+
+- microservices
+- Kubernetes
+- Elasticsearch
+- AI page builder
+- real-time collaboration
+- Rust backend
+- dozens of themes
+- dozens of components
+- complex visual editor
+- multi-region infrastructure
+- unnecessary Redis dependency
+- unnecessary Docker dependency
+
+
+==================================================
+51. GOLDEN RULES
+==================================================
+
+1. Build the platform once.
+
+2. Never copy-paste the entire platform for every client.
+
+3. Never allow clients to edit core platform code.
+
+4. Separate content from presentation.
+
+5. Separate theme source from theme configuration.
+
+6. Separate client customization from platform code.
+
+7. Version every reusable component.
+
+8. Version every theme.
+
+9. Maintain a platform.lock for every generated site.
+
+10. Preview and production must use the same renderer.
+
+11. Never generate a complete project for every builder change.
+
+12. Generate only after the client approves the design.
+
+13. Backup before updates.
+
+14. Never blindly overwrite client customization.
+
+15. Use migrations for database changes.
+
+16. Build React assets before shared-hosting deployment.
+
+17. Keep public pages SEO-friendly.
+
+18. Start with one excellent theme.
+
+19. Build reusable components before building many themes.
+
+20. Add Rust only when it solves a real problem.
+
+
+==================================================
+52. FINAL SYSTEM
+==================================================
+
+                    CENTRAL PLATFORM
+                           │
+              ┌────────────┴────────────┐
+              │                         │
+         Laravel API              React Platform
+              │                         │
+              │                  Visual Builder
+              │                         │
+              └────────────┬────────────┘
+                           │
+                    Project Config
+                           │
+                    Preview Renderer
+                           │
+                ┌──────────┴──────────┐
+                │                     │
+          Theme Package       Component Packages
+                │                     │
+                └──────────┬──────────┘
+                           │
+                        GENERATOR
+                           │
+                           ↓
+                 CLIENT NEWS WEBSITE
+                           │
+              ┌────────────┴────────────┐
+              │                         │
+           Laravel                 React Runtime
+              │                         │
+              └────────────┬────────────┘
+                           │
+                     Shared Hosting
+
+
+==================================================
+53. FINAL PRODUCT LOOP
+==================================================
+
+                    DESIGN
+                       ↓
+                 LIVE PREVIEW
+                       ↓
+                  CUSTOMIZE
+                       ↓
+                CLIENT APPROVAL
+                       ↓
+                   GENERATE
+                       ↓
+                    DEPLOY
+                       ↓
+                  MAINTAIN
+                       ↓
+                    UPDATE
+                       ↓
+                 SAFE ROLLBACK
+                       ↓
+                    REPEAT
+
+
+==================================================
+54. CORE BUSINESS PRINCIPLE
+==================================================
+
+The platform is NOT simply:
+
+    "a news CMS"
+
+and it is NOT simply:
+
+    "a website generator"
+
+It is:
+
+    A versioned product platform for generating,
+    deploying, and maintaining many independent
+    news websites from one reusable codebase.
+
+The most important engineering goal is:
+
+    Change the platform once
+            ↓
+    Safely propagate the change
+            ↓
+    To many client websites
+            ↓
+    Without destroying:
+        - client content
+        - client configuration
+        - client extensions
+        - client theme overrides
+
+
+==================================================
+55. SUCCESS CRITERIA
+==================================================
+
+The MVP is successful when you can do this:
+
+    1. Create a project
+    2. Select Modern theme
+    3. Add Hero
+    4. Add News Grid
+    5. Configure News Grid
+    6. Reorder sections
+    7. Change colors
+    8. See live preview
+    9. Approve design
+   10. Generate project
+   11. Download deployment package
+   12. Deploy to shared hosting
+   13. Add real client content
+   14. Release a component update
+   15. Upgrade the client site
+   16. Verify client content/customizations remain intact
+
+If this complete loop works reliably, the foundation
+of the business is proven.
