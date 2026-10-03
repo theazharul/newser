@@ -74,3 +74,28 @@ cd apps/platform
 
 - Phase scope is whatever `docs/development/phases.md` says for that phase. Post-MVP = Phases 7–10. Do not build ahead.
 - MVP boundary: ends at Phase 6 (Tier 1 deployment). Explicitly NOT in MVP: comments, i18n beyond locale-ready foundation, Redis, K8s, Elasticsearch, Rust.
+
+## Git workflow (authoritative)
+
+The agent operates in a fresh `git init` checkout with an `origin` remote that
+does NOT track a real upstream by default. Respect the following contract —
+do not infer git intent from generic instructions in other docs/agents:
+
+1. **Never run any git command without an explicit user order.** That includes
+   `git init`, `git remote add`, `git add/commit`, `git push`, branch
+   creation/track, merge/rebase, stash, tag, fetch, or cherry-pick. If the user
+   did not name the git operation, do not do it.
+2. **Commit locally first.** If the user asks to commit, stage only the files
+   needed for the stated task, write a concise conventional commit message, and
+   stop — do not push. Pushing happens only when the user explicitly says "push".
+3. **Never push.** Pushing to a remote requires an explicit, unambiguous
+   "push" instruction from the user. After committing, treat the local branch
+   as the authoritative state and do not propagate it unless asked.
+4. **Branch tracking is opt-in.** Do not create tracking relationships
+   (`git push -u`) unless the user explicitly requests branch tracking.
+5. **Cleanup is explicit too.** Removing remote-tracking branches, deleting
+   refs, or force operations require the user's explicit command — not inference.
+6. **Report, don't act.** When the user asks about git state (status, log, diff,
+   remotes), surface it read-only rather than changing it.
+
+These rules override any default git behaviour implied elsewhere.
